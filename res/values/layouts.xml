@@ -38,6 +38,7 @@
     <item>georgian_qwerty</item>
     <item>grek_qwerty</item>
     <item>guj_phonetic_in</item>
+    <item>hang_dubeolsik_custom</item>
     <item>hang_dubeolsik_kr</item>
     <item>hebr_1_il</item>
     <item>hebr_2_il</item>
@@ -132,6 +133,7 @@
     <item>ქართული (QWERTY)</item>
     <item>QWERTY (Greek)</item>
     <item>ગુજરાતી ફોનેટિક - Gujarati Phonetic</item>
+    <item>두벌식 (Custom)</item>
     <item>두벌식 (Korean)</item>
     <item>Hebrew 1</item>
     <item>Hebrew 2</item>
@@ -226,6 +228,7 @@
     <item>@xml/georgian_qwerty</item>
     <item>@xml/grek_qwerty</item>
     <item>@xml/guj_phonetic_in</item>
+    <item>@xml/hang_dubeolsik_custom</item>
     <item>@xml/hang_dubeolsik_kr</item>
     <item>@xml/hebr_1_il</item>
     <item>@xml/hebr_2_il</item>
