@@ -25,6 +25,8 @@ public final class Hangul implements Composer
 {
   /** The jamo typed so far, as elementary jamo. */
   private final StringBuilder _jamo = new StringBuilder();
+  /** Syllables that have been completed and are ready to be committed immediately. */
+  private final StringBuilder _committed = new StringBuilder();
 
   @Override
   public boolean type(String s)
@@ -38,7 +40,18 @@ public final class Hangul implements Composer
         return false;
     for (int i = 0; i < s.length(); i++)
       _jamo.append(expand(s.charAt(i)));
+    check_commit();
     return true;
+  }
+
+  @Override
+  public String take_committed()
+  {
+    if (_committed.length() == 0)
+      return "";
+    String s = _committed.toString();
+    _committed.setLength(0);
+    return s;
   }
 
   @Override
@@ -67,6 +80,95 @@ public final class Hangul implements Composer
   public void reset()
   {
     _jamo.setLength(0);
+    _committed.setLength(0);
+  }
+
+  private void check_commit()
+  {
+    int n = _jamo.length();
+    int i = 0;
+    int carried = -1;
+    java.util.ArrayList<SyllableSpan> spans = new java.util.ArrayList<SyllableSpan>();
+    while (i < n)
+    {
+      int initial;
+      if (carried >= 0)
+      {
+        initial = carried;
+        carried = -1;
+      }
+      else if (is_consonant(_jamo.charAt(i)))
+      {
+        initial = INITIALS.indexOf(_jamo.charAt(i++));
+      }
+      else
+      {
+        initial = SILENT;
+      }
+      int medial = -1;
+      if (i < n && is_vowel(_jamo.charAt(i)))
+      {
+        medial = MEDIALS.indexOf(_jamo.charAt(i++));
+        while (i < n && is_vowel(_jamo.charAt(i)))
+        {
+          int m = combine_medial(MEDIALS.charAt(medial), _jamo.charAt(i));
+          if (m < 0)
+            break;
+          medial = m;
+          i++;
+        }
+      }
+      if (medial < 0)
+      {
+        spans.add(new SyllableSpan(INITIALS.charAt(initial), i, false));
+        continue;
+      }
+      int fin = 0;
+      int fin_start = i;
+      while (i < n && is_consonant(_jamo.charAt(i)))
+      {
+        char c = _jamo.charAt(i);
+        int f = (fin == 0) ? FINALS.indexOf(c) : combine_final(FINALS.charAt(fin), c);
+        if (f <= 0)
+          break;
+        fin = f;
+        i++;
+      }
+      int syllable_end = i;
+      if (fin != 0 && i < n && is_vowel(_jamo.charAt(i)))
+      {
+        int[] split = split_final(FINALS.charAt(fin));
+        fin = FINALS.indexOf((char)split[0]);
+        carried = INITIALS.indexOf((char)split[1]);
+        if (split[0] == 0)
+          syllable_end = fin_start;
+        else
+          syllable_end = fin_start + 1;
+      }
+      char syl = (char)(FIRST_SYLLABLE + initial * 588 + medial * 28 + fin);
+      spans.add(new SyllableSpan(syl, syllable_end, true));
+    }
+
+    if (spans.size() >= 2 && spans.get(spans.size() - 1).has_vowel)
+    {
+      int commit_count = spans.get(spans.size() - 2).end_jamo;
+      for (int k = 0; k < spans.size() - 1; k++)
+        _committed.append(spans.get(k).character);
+      _jamo.delete(0, commit_count);
+    }
+  }
+
+  private static final class SyllableSpan
+  {
+    final char character;
+    final int end_jamo;
+    final boolean has_vowel;
+    SyllableSpan(char c, int end, boolean v)
+    {
+      character = c;
+      end_jamo = end;
+      has_vowel = v;
+    }
   }
 
   /** The initial consonants, in the order used by the Unicode Hangul Syllables

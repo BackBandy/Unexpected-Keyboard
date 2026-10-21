@@ -11,9 +11,14 @@ public class HangulTest
   static String type(String... keys)
   {
     Hangul hangul = new Hangul();
+    StringBuilder sb = new StringBuilder();
     for (String key : keys)
+    {
       assertTrue("key not consumed: " + key, hangul.type(key));
-    return hangul.text();
+      sb.append(hangul.take_committed());
+    }
+    sb.append(hangul.text());
+    return sb.toString();
   }
 
   static Hangul typed(String... keys)
@@ -103,6 +108,13 @@ public class HangulTest
     assertFalse(hangul.type("가"));
     assertFalse(hangul.type("ㄱa"));
     assertEquals("가", hangul.text());
+  }
+
+  @Test
+  public void terminal_friendly_syllables()
+  {
+    assertEquals("테스트", type("ㅌ", "ㅔ", "ㅅ", "ㅡ", "ㅌ", "ㅡ"));
+    assertEquals("문장입니다", type("ㅁ", "ㅜ", "ㄴ", "ㅈ", "ㅏ", "ㅇ", "ㅇ", "ㅣ", "ㅂ", "ㄴ", "ㅣ", "ㄷ", "ㅏ"));
   }
 
   @Test

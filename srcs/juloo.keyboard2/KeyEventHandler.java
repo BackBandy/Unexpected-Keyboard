@@ -108,11 +108,23 @@ public final class KeyEventHandler
     InputConnection conn = _recv.getCurrentInputConnection();
     if (conn == null)
       return;
+    String committed = _composer.take_committed();
+    if (committed.length() > 0)
+    {
+      _autocap.typed(committed);
+      _typedword.typed(committed);
+      conn.commitText(committed, 1);
+    }
     String text = _composer.text();
     if (text.length() == 0)
-      conn.commitText("", 1);
+    {
+      if (committed.length() == 0)
+        conn.commitText("", 1);
+    }
     else
+    {
       conn.setComposingText(text, 1);
+    }
     List<Composer.Candidate> candidates = _composer.candidates();
     /* Keep the dictionary suggestions when the composer has none: the row
        belongs to the dictionary then. The word composed so far is used, not
@@ -127,8 +139,10 @@ public final class KeyEventHandler
       dictionary suggestions. */
   void finish_composition()
   {
+    InputConnection conn = _recv.getCurrentInputConnection();
+    String committed = _composer.take_committed();
     String text = _composer.text();
-    if (text.length() == 0)
+    if (committed.length() == 0 && text.length() == 0)
       return;
     List<Composer.Candidate> candidates = _composer.candidates();
     _composer.reset();
@@ -137,13 +151,19 @@ public final class KeyEventHandler
     if (candidates.size() > 0)
       _suggestions.composition_candidates(
           Collections.<Composer.Candidate>emptyList());
-    InputConnection conn = _recv.getCurrentInputConnection();
     if (conn == null)
       return;
-    // Committing text replaces the composing text, the text of the editor does
-    // not change. [CurrentlyTypedWord] reads it back from the editor.
-    _autocap.typed(text);
-    conn.commitText(text, 1);
+    if (committed.length() > 0)
+    {
+      _autocap.typed(committed);
+      _typedword.typed(committed);
+      conn.commitText(committed, 1);
+    }
+    if (text.length() > 0)
+    {
+      _autocap.typed(text);
+      conn.commitText(text, 1);
+    }
     /* The composition is the word in the editor now. Read it back and query
        the dictionary: without this no query is issued and the row stays empty
        until the next keystroke. */

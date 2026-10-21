@@ -75,6 +75,10 @@ public interface Composer
   /** Forget the composition without committing it. */
   public void reset();
 
+  /** Returns completed syllables that should be committed immediately,
+      clearing them from the internal buffer. Returns "" if none. */
+  default String take_committed() { return ""; }
+
   /** A composer that never composes anything, used for scripts that are typed
       one key at a time. */
   public static final Composer NONE = new Composer()
