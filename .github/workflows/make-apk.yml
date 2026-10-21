@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - master
+      - feat/korean-custom-layout
   pull_request:
 
 jobs:
